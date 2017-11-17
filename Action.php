@@ -38,7 +38,7 @@ class JSON_Action extends Typecho_Widget implements Widget_Interface_Do {
         $authorId = self::GET('authorId', 0);
         $offset = $pageSize * ( $page - 1 );
         
-        $select = $this->db->select('cid', 'title', 'created', 'type', 'slug', 'text')->from('table.contents')
+        $select = $this->db->select('cid', 'title', 'created', 'authorId', 'type', 'slug', 'text')->from('table.contents')
             ->where('type = ?', 'post')
             ->where('status = ?', 'publish')
             ->where('created < ?', time())
@@ -88,10 +88,15 @@ class JSON_Action extends Typecho_Widget implements Widget_Interface_Do {
         $result = array();
         foreach($posts as $post) {
             $post = $this->widget("Widget_Abstract_Contents")->push($post);
-			$post['tag'] = $this->db->fetchAll($this->db->select('name')->from('table.metas')
-			->join('table.relationships', 'table.metas.mid = table.relationships.mid', Typecho_DB::LEFT_JOIN)
-			->where('table.relationships.cid = ?', $post['cid'])
-			->where('table.metas.type = ?', 'tag'));
+            $post['tag'] = $this->db->fetchAll($this->db->select('name')->from('table.metas')
+            ->join('table.relationships', 'table.metas.mid = table.relationships.mid', Typecho_DB::LEFT_JOIN)
+            ->where('table.relationships.cid = ?', $post['cid'])
+            ->where('table.metas.type = ?', 'tag'));
+            
+            $post['author'] = $this->db->fetchAll($this->db->select('screenName', 'customAvatar')->from('table.users')
+            ->where('table.users.uid = ?', $post['authorId']));
+            // print_r($post);
+            // echo '++++++++++++++++++++';
             $result[] = $post;
         }
         $this->export($result);
