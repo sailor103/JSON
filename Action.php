@@ -126,11 +126,13 @@ class JSON_Action extends Typecho_Widget implements Widget_Interface_Do {
         if(!isset($_GET['cid']) && !isset($_GET['slug']))
             $this->export(self::LACK_PARAMETER, 404);
 
-        $select = $this->db->select('cid', 'created', 'type', 'slug', 'text')->from('table.contents');
+        $select = $this->db->select('cid', 'title', 'created', 'authorId', 'type', 'slug', 'text')->from('table.contents');
         if(isset($_GET['cid'])) $select->where('cid = ?', $_GET['cid']);
         if(isset($_GET['slug'])) $select->where('slug = ?', $_GET['slug']);
         $post = $this->db->fetchRow($select);
         $post = $this->widget("Widget_Abstract_Contents")->push($post);
+        $post['author'] = $this->db->fetchAll($this->db->select('screenName', 'customAvatar')->from('table.users')
+            ->where('table.users.uid = ?', $post['authorId']));
         
         $this->export($post);
     }
